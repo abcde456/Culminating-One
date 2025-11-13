@@ -7,7 +7,7 @@ def clean_text(path: str) -> str:
     fileText = ""
 
     try:
-        with open(path) as f:
+        with open(path, 'r', encoding='utf-8') as f:
             fileText = f.read()
     except FileNotFoundError:
         return "ERROR: File not found"
@@ -21,12 +21,23 @@ def clean_text(path: str) -> str:
 
 def blockText(text):
     x = 0
+    z = 0
+    y = False
     textToReturn = ""
     for i in text:
         if(x > 4):
-            x = 0
-            textToReturn += " "
+            z += 1
+            if(z > 7):
+                textToReturn += "\n"
+                z = 0
+                y = True
+            else:
+                y = False
+            x = 0 
+            if y == False:
+                textToReturn += " "
             textToReturn += i
+            y = False
         else:
             textToReturn += i
         x += 1
