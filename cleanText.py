@@ -19,7 +19,7 @@ def clean_text(path: str) -> str:
     # 4. Return the cleaned string
     return fileText
 
-def blockText(text):
+def chunk5(text):
     x = 0
     z = 0
     y = False
@@ -48,9 +48,11 @@ def main():
     filename = input("Enter filename: ").strip()
     cleaned = clean_text(filename)
     with open("clean.txt", "w") as f:
-        f.write(blockText(cleaned))
+        f.write(chunk5(cleaned))
 
-    get_key()
+    key = get_key()    
+
+    print(encode(chunk5(cleaned), key))
 
 def get_key() -> int:
     while True:
@@ -71,6 +73,20 @@ def get_key() -> int:
         except ValueError:   # which exception?
             print("Invalid — you may only enter a number.")
             # loop continues
+
+def encode(text: str, key: int) -> str:
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+    shiftedText = ""
+
+    for ch in text:
+        pos = alphabet.find(ch)
+
+        newLetter = alphabet[(pos + key) % 26]
+
+        shiftedText += newLetter
+
+    return shiftedText
 
 if __name__ == "__main__":
     main()
