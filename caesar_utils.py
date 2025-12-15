@@ -1,5 +1,27 @@
 import string
 
+IMPOSSIBLE_DOUBLE_LETTER_CONSTANT = 1
+IMPOSSIBLE_BIGRAM_CONSTANT = 1
+LETTER_FREQUENCY_CONSTANT = 1
+
+FIRST_PLACE_CONSTANT = 1.2
+SECOND_PLACE_CONSTANT = 0.5
+THIRD_PLACE_CONSTANT = 0.25
+FOURTH_PLACE_CONSTANT = 0.125
+FIFTH_PLACE_CONSTANT = 0.0675
+
+letterPointDict = {'A': 7.8, 'B': 2.0, 'C': 4.0, 'D': 3.8, 'E': 11.0, 'F': 1.4, 'G': 3.0, 'H': 2.3, 'I': 8.6, 'J': 0.25, 'K': 0.97, 'L': 5.3, 'M': 2.7, 'N': 7.2, 'O': 6.1, 'P': 2.8, 'Q': 0.19, 'R': 7.3, 'S': 8.7, 'T': 6.7, 'U': 3.3, 'V': 3.3, 'W': 1.0, 'X': 0.27, 'Y': 1.6, 'Z': 0.44}
+
+# As of right now, can only be a maximum of 5
+LEADERBOARD_CUTOFF_POS = 5
+
+NO_COMMON_WORDS_PUNISHMENT = 25
+
+MOST_COMMON_WORDS = []
+
+with open("words.txt", 'r') as file:
+    MOST_COMMON_WORDS = file.read().splitlines()
+
 translator = str.maketrans('', '', string.punctuation)
 alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -151,36 +173,36 @@ def filterFile(text: str):
     return filteredText
 
 # This function will eliminate the impossible combinations of a caeser cipher
-def eliminateImpossible(text):
+def uncipher(text):
     # The first item in the array is the text, the second is a boolean
     # that tells us if the program is still considering it as possible
     keyDict = {
-        0: [text, True],
-        1: [encode(text, 1), True],
-        2: [encode(text, 2), True],
-        3: [encode(text, 3), True],
-        4: [encode(text, 4), True],
-        5: [encode(text, 5), True],
-        6: [encode(text, 6), True],
-        7: [encode(text, 7), True],
-        8: [encode(text, 8), True],
-        9: [encode(text, 9), True],
-        10: [encode(text, 10), True],
-        11: [encode(text, 11), True],
-        12: [encode(text, 12), True],
-        13: [encode(text, 13), True],
-        14: [encode(text, 14), True],
-        15: [encode(text, 15), True],
-        16: [encode(text, 16), True],
-        17: [encode(text, 17), True],
-        18: [encode(text, 18), True],
-        19: [encode(text, 19), True],
-        20: [encode(text, 20), True],
-        21: [encode(text, 21), True],
-        22: [encode(text, 22), True],
-        23: [encode(text, 23), True],
-        24: [encode(text, 24), True],
-        25: [encode(text, 25), True]
+        0: [text, 0],
+        1: [encode(text, 1), 0],
+        2: [encode(text, 2), 0],
+        3: [encode(text, 3), 0],
+        4: [encode(text, 4), 0],
+        5: [encode(text, 5), 0],
+        6: [encode(text, 6), 0],
+        7: [encode(text, 7), 0],
+        8: [encode(text, 8), 0],
+        9: [encode(text, 9), 0],
+        10: [encode(text, 10), 0],
+        11: [encode(text, 11), 0],
+        12: [encode(text, 12), 0],
+        13: [encode(text, 13), 0],
+        14: [encode(text, 14), 0],
+        15: [encode(text, 15), 0],
+        16: [encode(text, 16), 0],
+        17: [encode(text, 17), 0],
+        18: [encode(text, 18), 0],
+        19: [encode(text, 19), 0],
+        20: [encode(text, 20), 0],
+        21: [encode(text, 21), 0],
+        22: [encode(text, 22), 0],
+        23: [encode(text, 23), 0],
+        24: [encode(text, 24), 0],
+        25: [encode(text, 25), 0]
     }
 
     impossibleArray = [
@@ -189,21 +211,59 @@ def eliminateImpossible(text):
     ]
     
     for value in keyDict.values():
-        if ("JJ" in value[0] and ("AJ" not in value[0] and "EJ" not in value[0] and "IJ" not in value[0] and "OJ" not in value[0] or "UJ" not in value[0])) and ("VV" in value[0] and ("AV" not in value[0] and "EV" not in value[0] and "IV" not in value[0] and "OV" not in value[0] and "UV" not in value[0])):
-            value[1] = False
+        if ("JJ" in value[0] or "VV" in value[0]):
+            value[1] -= IMPOSSIBLE_DOUBLE_LETTER_CONSTANT
         
-        if value[1] == True:
-            for bigram in impossibleArray:
-                if bigram.upper() in value[0] and ("AJ" not in value[0] and "EJ" not in value[0] and "IJ" not in value[0] and "OJ" not in value[0] and "UJ" not in value[0] and "AV" not in value[0] and "EV" not in value[0] and "IV" not in value[0] and "OV" not in value[0] and "UV" not in value[0]):
-                    value[1] = False
+        for bigram in impossibleArray:
+            if bigram.upper() in value[0]:
+                value[1] -= IMPOSSIBLE_BIGRAM_CONSTANT
 
-    for value in keyDict.values():
-        print(value[1])
+        foundAnyCommonWord = False
+        for i in MOST_COMMON_WORDS:
+            if i.strip() in value[0]:
+                foundAnyCommonWord = True
+
+        if foundAnyCommonWord == False:            
+            value[1] -= NO_COMMON_WORDS_PUNISHMENT
+
+        frequency = letter_frequency(value[0])
+
+        leaderboard = (sorted(frequency, key=frequency.get, reverse=True))
+
+        del leaderboard[LEADERBOARD_CUTOFF_POS:]
+
+        for index, i in enumerate(leaderboard):
+            valOfLetter = letterPointDict.get(i)
+
+            if(index == 0):
+                value[1] += valOfLetter * FIRST_PLACE_CONSTANT
+            elif index == 1:
+                value[1] += valOfLetter * SECOND_PLACE_CONSTANT
+            elif index == 2:
+                value[1] += valOfLetter * THIRD_PLACE_CONSTANT
+            elif index == 3:
+                value[1] += valOfLetter * FOURTH_PLACE_CONSTANT
+            elif index == 4:
+                value[1] += valOfLetter * FIFTH_PLACE_CONSTANT
+    
+    best_key = -1
+    highest_score = -999999999999999
+    for key, value in keyDict.items():
+        current_score = value[1]
+        
+        if current_score > highest_score:
+            highest_score = current_score
+            best_key = key
+    
+    if best_key != -1:
+        best_text = keyDict[best_key][0]
+        print(best_text)
+
 
 
 def main():
     filteredText = filterFile("test.txt")
-    eliminateImpossible(filteredText.upper())
+    uncipher(filteredText)
 
 if __name__ == "__main__":
     main()    
